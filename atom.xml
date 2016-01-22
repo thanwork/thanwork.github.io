@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-  <title><![CDATA[Than Blog]]></title>
+  <title><![CDATA[Than Work]]></title>
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://yoursite.com/"/>
-  <updated>2016-01-22T02:42:55.845Z</updated>
+  <updated>2016-01-22T07:51:39.332Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -13,6 +13,23 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[my second post]]></title>
+    <link href="http://yoursite.com/2016/01/22/my-second-post/"/>
+    <id>http://yoursite.com/2016/01/22/my-second-post/</id>
+    <published>2016-01-22T07:49:51.000Z</published>
+    <updated>2016-01-22T07:51:39.332Z</updated>
+    <content type="html"></content>
+    <summary type="html">
+    
+    </summary>
+    
+      <category term="测试" scheme="http://yoursite.com/tags/%E6%B5%8B%E8%AF%95/"/>
+    
+      <category term="生活" scheme="http://yoursite.com/categories/%E7%94%9F%E6%B4%BB/"/>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[my first post]]></title>
