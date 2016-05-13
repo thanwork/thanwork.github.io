@@ -4,7 +4,7 @@
   
   <link href="/atom.xml" rel="self"/>
   <link href="http://yoursite.com/"/>
-  <updated>2016-01-22T07:51:39.332Z</updated>
+  <updated>2016-05-13T08:26:01.503Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -13,6 +13,81 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title><![CDATA[wildfly use https]]></title>
+    <link href="http://yoursite.com/2016/05/13/wildfly-use-https/"/>
+    <id>http://yoursite.com/2016/05/13/wildfly-use-https/</id>
+    <published>2016-05-13T08:25:10.000Z</published>
+    <updated>2016-05-13T08:26:01.503Z</updated>
+    <content type="html"><![CDATA[<p>wildfly配置https</p>
+<ul>
+<li>使用的wildfly版本：8.2.1</li>
+</ul>
+<p>##步骤</p>
+<h3 id="1-__u521B_u5EFA_u4E00_u4E2AKeystore_u6587_u4EF6"><a href="#1-__u521B_u5EFA_u4E00_u4E2AKeystore_u6587_u4EF6" class="headerlink" title="1. 创建一个Keystore文件"></a>1. 创建一个Keystore文件</h3><p>CMD方式调用java的keytool工具(位于java的安装目录bin文件夹中)</p>
+<pre><code>keytool -keysize 2048 -genkey -alias wildfly -keyalg RSA -keystore wildfly.keystore
+</code></pre><blockquote>
+<p>生成的keystory文件会位于CMD的当前目录</p>
+</blockquote>
+<h3 id="2-__u521B_u5EFA_u4E00_u4E2Aa_Certificate_Signing_Request__28CSR_29_u6587_u4EF6"><a href="#2-__u521B_u5EFA_u4E00_u4E2Aa_Certificate_Signing_Request__28CSR_29_u6587_u4EF6" class="headerlink" title="2. 创建一个a Certificate Signing Request (CSR)文件"></a>2. 创建一个a Certificate Signing Request (CSR)文件</h3><p>CSR文件用于生成向证书机构申请SSL证书，同样适用keytool工具</p>
+<pre><code>keytool -certreq -keyalg RSA -alias wildfly -file yourdomain.csr -keystore wildfly.keystore
+</code></pre><h3 id="3-__u5411_u8BC1_u4E66_u673A_u6784_u7533_u8BF7SSL_u8BC1_u4E66"><a href="#3-__u5411_u8BC1_u4E66_u673A_u6784_u7533_u8BF7SSL_u8BC1_u4E66" class="headerlink" title="3. 向证书机构申请SSL证书"></a>3. 向证书机构申请SSL证书</h3><p>我们可以在StartSSL网站申请<strong>免费的SSL证书</strong>，需要上传生成的CSR文件</p>
+<h3 id="4-_u4ECE_u8BC1_u4E66_u63D0_u4F9B_u673A_u6784_u7F51_u7AD9_u4E0B_u8F7D_u8BC1_u4E66"><a href="#4-_u4ECE_u8BC1_u4E66_u63D0_u4F9B_u673A_u6784_u7F51_u7AD9_u4E0B_u8F7D_u8BC1_u4E66" class="headerlink" title="4.从证书提供机构网站下载证书"></a>4.从证书提供机构网站下载证书</h3><p>在startSSL上下载的证书包括了三个文件：</p>
+<ul>
+<li>1_Intermediate.crt</li>
+<li>root.crt</li>
+<li>2_yourdomain.crt  <em>此处的yourdomain指的是你自己申请的域名</em></li>
+</ul>
+<h3 id="5-__u5C06_u751F_u6210_u7684_u8BC1_u4E66_u5B89_u88C5_u5230_u751F_u6210_u7684keystore_u6587_u4EF6_u4E2D"><a href="#5-__u5C06_u751F_u6210_u7684_u8BC1_u4E66_u5B89_u88C5_u5230_u751F_u6210_u7684keystore_u6587_u4EF6_u4E2D" class="headerlink" title="5. 将生成的证书安装到生成的keystore文件中"></a>5. 将生成的证书安装到生成的keystore文件中</h3><p>以步骤4生成的三个文件名为例：</p>
+<ol>
+<li><p>将根证书安装到keystore中</p>
+<pre><code>keytool -import -alias root -keystore wildfly.keystore -trustcacerts –file root.crt
+</code></pre></li>
+</ol>
+<ol>
+<li><p>安装中介证书到keystore中</p>
+<pre><code>keytool -import -alias intermed -keystore wildfly.keystore -trustcacerts –file 1_Intermediate.crt
+</code></pre></li>
+<li><p>安装你自己的域名证书到keystore中</p>
+<p>  keytool -import -alias tomcat -keystore wildfly.keystore -trustcacerts –file yourdomain.com</p>
+</li>
+<li><p>检查确认是否所有的三个证书都已经安装到keystore中</p>
+<pre><code>keytool –list –keystore tomcat.keystore
+</code></pre></li>
+</ol>
+<h3 id="6-_wildfly_u914D_u7F6Estandalone-xml_u6587_u4EF6"><a href="#6-_wildfly_u914D_u7F6Estandalone-xml_u6587_u4EF6" class="headerlink" title="6. wildfly配置standalone.xml文件"></a>6. wildfly配置standalone.xml文件</h3><ol>
+<li>在”&lt;security-realm name=”ManagementRealm&gt;”中增加如下节点</li>
+<li><pre><code>&lt;server-identities&gt;
+    &lt;ssl&gt;
+        &lt;keystore path=&quot;/文件位置/wildfly.keystore&quot; keystore-password=&quot;生成keystore时设置的密码&quot;/&gt;
+    &lt;/ssl&gt;
+&lt;/server-identities&gt;
+</code></pre></li>
+<li><p>在”&lt;server name=”default-server&gt;”中增加或修改</p>
+  <https-listener name="https" socket-binding="https" security-realm="ManagementRealm">
+
+
+</https-listener></li>
+</ol>
+<ol>
+<li><p>如此配置之后已经可以正常使用https访问服务器了，但是管理端口仍然还未实现https访问，还需要在standalone.xml中”<management-interfaces>“配置的http访问改为https访问</management-interfaces></p>
+<p>  <http-interface security-realm="ManagementRealm" http-upgrade-enabled="true"></http-interface></p>
+<pre><code>&lt;socket-binding https=&quot;management-https&quot;/&gt;
+</code></pre><p>  </p>
+</li>
+</ol>
+]]></content>
+    <summary type="html">
+    <![CDATA[<p>wildfly配置https</p>
+<ul>
+<li>使用的wildfly版本：8.2.1</li>
+</ul>
+<p>##步骤</p>
+<h3 id="1-__u521B_u5EFA_u4E00_u4E2AKeystore_u6587_u4EF6"><a href="#]]>
+    </summary>
+    
+  </entry>
   
   <entry>
     <title><![CDATA[my second post]]></title>
